@@ -82,6 +82,15 @@ final class LootChatParser
 	 */
 	private static final String DROP_SOURCE = "(?: \\((?<src>[^()]+)\\))?";
 
+	/**
+	 * The killer when a broadcast names it after the drop's worth rather than in brackets, as in
+	 * "60 x Magic logs (44,340 coins) from Spindel". Nothing reads the name, but it still has to be
+	 * matched: left to the item group it becomes part of the item's name, which then matches no item,
+	 * prices at zero, and takes the stated value down with it - so a 44k drop reads as worthless and
+	 * is hidden by the minimum value filter.
+	 */
+	private static final String TRAILING_KILLER = "(?: from [^()]+?)?";
+
 	private static final List<Rule> RULES = Collections.unmodifiableList(Arrays.asList(
 		// Confirmed in-game. Bosses that assign a drop by damage announce it in green to everyone
 		// present, as "<col=005f00>Name received a drop: Item</col> <col=106f10>(General Graardor)</col>".
@@ -90,7 +99,7 @@ final class LootChatParser
 		new Rule(
 			"BOSS_DROP",
 			Pattern.compile("^" + NAME + " received a drop: (?:(?<qty>[\\d,]+) x )?(?<item>.+?)"
-				+ DROP_SOURCE + "\\.?$"),
+				+ DROP_SOURCE + TRAILING_KILLER + "\\.?$"),
 			EnumSet.of(ChatMessageType.GAMEMESSAGE, ChatMessageType.SPAM),
 			LootSource.BOSS,
 			false),
@@ -100,7 +109,7 @@ final class LootChatParser
 		new Rule(
 			"GIM_DROP",
 			Pattern.compile("^" + NAME + " received a drop: (?:(?<qty>[\\d,]+) x )?(?<item>.+?)"
-				+ DROP_SOURCE + "\\.?$"),
+				+ DROP_SOURCE + TRAILING_KILLER + "\\.?$"),
 			EnumSet.of(ChatMessageType.CLAN_GIM_MESSAGE, ChatMessageType.CLAN_MESSAGE,
 				ChatMessageType.FRIENDSCHATNOTIFICATION),
 			LootSource.GROUP_IRONMAN,
@@ -110,7 +119,7 @@ final class LootChatParser
 		new Rule(
 			"GIM_SPECIAL_RAID",
 			Pattern.compile("^" + NAME + " received special loot from a raid: (?<item>.+?)"
-				+ DROP_SOURCE + "\\.?$"),
+				+ DROP_SOURCE + TRAILING_KILLER + "\\.?$"),
 			EnumSet.of(ChatMessageType.CLAN_GIM_MESSAGE, ChatMessageType.CLAN_MESSAGE,
 				ChatMessageType.FRIENDSCHATNOTIFICATION),
 			LootSource.GROUP_IRONMAN,
@@ -120,7 +129,8 @@ final class LootChatParser
 		// announcement. The message type is uncertain, so the likely carriers are all accepted.
 		new Rule(
 			"BOSS_SPECIAL",
-			Pattern.compile("^" + NAME + " found something special: (?<item>.+?)" + DROP_SOURCE + "\\.?$"),
+			Pattern.compile("^" + NAME + " found something special: (?<item>.+?)"
+				+ DROP_SOURCE + TRAILING_KILLER + "\\.?$"),
 			EnumSet.of(ChatMessageType.GAMEMESSAGE, ChatMessageType.FRIENDSCHATNOTIFICATION,
 				ChatMessageType.CLAN_MESSAGE, ChatMessageType.SPAM),
 			LootSource.BOSS,
