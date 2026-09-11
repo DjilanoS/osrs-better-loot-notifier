@@ -175,6 +175,50 @@ public class LootChatParserTest
 		assertEquals(120_000L, shard.getBroadcastValue());
 	}
 
+	/**
+	 * Captured from the client log. Some broadcasts name the killer after the coin total instead of
+	 * in brackets, and a pattern that only allows a bracketed tail swallows the whole remainder as
+	 * the item's name - which resolves to no item, prices at zero, and hides a 44k drop behind the
+	 * minimum value filter.
+	 */
+	@Test
+	public void readsTheValueWhenTheKillerFollowsTheCoinTotal()
+	{
+		final LootEvent loot = LootChatParser.parse(
+			ChatMessageType.CLAN_GIM_MESSAGE,
+			"LuckyOat received a drop: 60 x Magic logs (44,340 coins) from Spindel.");
+
+		assertNotNull(loot);
+		assertEquals("LuckyOat", loot.getPlayerName());
+		assertEquals("Magic logs", loot.getItemName());
+		assertEquals(60, loot.getQuantity());
+		assertEquals(44_340L, loot.getBroadcastValue());
+		assertNull("a coin total is not a drop source", loot.getDropSource());
+	}
+
+	@Test
+	public void aTrailingKillerLeavesBracketsThatBelongToTheItemName()
+	{
+		final LootEvent loot = LootChatParser.parse(
+			ChatMessageType.CLAN_GIM_MESSAGE,
+			"LuckyOat received a drop: Amulet of glory (6) (12,000 coins) from Spindel.");
+
+		assertNotNull(loot);
+		assertEquals("Amulet of glory (6)", loot.getItemName());
+		assertEquals(12_000L, loot.getBroadcastValue());
+	}
+
+	@Test
+	public void aTrailingKillerIsNotPartOfTheItemNameWhenNoValueIsStated()
+	{
+		final LootEvent loot = LootChatParser.parse(
+			ChatMessageType.CLAN_GIM_MESSAGE,
+			"LuckyOat received a drop: Dragon pickaxe from Spindel.");
+
+		assertNotNull(loot);
+		assertEquals("Dragon pickaxe", loot.getItemName());
+	}
+
 	@Test
 	public void aNamedKillerIsStillADropSourceRatherThanAValue()
 	{
