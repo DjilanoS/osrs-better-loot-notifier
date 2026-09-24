@@ -178,7 +178,7 @@ class LootCardController
 		final long stated = event.getBroadcastValue();
 		final long totalValue = stated != LootEvent.UNKNOWN_VALUE
 			? stated
-			: (long) itemResolver.priceFor(itemId) * quantity;
+			: itemResolver.priceFor(itemId) * quantity;
 
 		if (!filter.accept(itemName, (int) Math.min(Integer.MAX_VALUE, totalValue)))
 		{

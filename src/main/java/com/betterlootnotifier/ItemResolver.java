@@ -128,14 +128,14 @@ class ItemResolver
 	/**
 	 * @return the Grand Exchange price of one of the item, or 0 when it has none (every untradeable)
 	 */
-	int priceFor(int itemId)
+	long priceFor(int itemId)
 	{
 		if (itemId == LootEvent.UNKNOWN_ITEM_ID)
 		{
 			return 0;
 		}
 
-		return Math.max(0, itemManager.getItemPrice(itemManager.canonicalize(itemId)));
+		return Math.max(0L, itemManager.getItemPrice(itemManager.canonicalize(itemId)));
 	}
 
 	/**
